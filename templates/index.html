@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vaani — Indian TTS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Yatra+One&family=Hind+Siliguri:wght@300;400;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --saffron: #FF6B00;
+    --deep-saffron: #E85D00;
+    --gold: #F4A200;
+    --cream: #FFF8EE;
+    --charcoal: #1A1209;
+    --bark: #3D2B1F;
+    --muted: #7A5C44;
+    --jade: #1B6B4A;
+    --jade-light: #2A9D6F;
+    --card-bg: rgba(255,248,238,0.92);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Hind Siliguri', sans-serif;
+    background: var(--charcoal);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Mandala background pattern */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(ellipse at 20% 20%, rgba(255,107,0,0.12) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(244,162,0,0.10) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, rgba(27,107,74,0.06) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Decorative border top */
+  body::after {
+    content: '✦ वाणी ✦';
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, var(--jade), var(--saffron), var(--gold), var(--saffron), var(--jade));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 680px;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .logo {
+    font-family: 'Yatra One', cursive;
+    font-size: clamp(52px, 10vw, 80px);
+    color: var(--saffron);
+    letter-spacing: -1px;
+    line-height: 1;
+    text-shadow: 4px 4px 0 rgba(232,93,0,0.3);
+    animation: fadeDown 0.7s ease both;
+  }
+
+  .logo span {
+    color: var(--gold);
+  }
+
+  .tagline {
+    font-family: 'DM Serif Display', serif;
+    font-style: italic;
+    color: var(--muted);
+    font-size: 16px;
+    margin-top: 6px;
+    letter-spacing: 0.5px;
+    animation: fadeDown 0.7s 0.1s ease both;
+  }
+
+  .devanagari-label {
+    display: block;
+    font-family: 'Hind Siliguri', sans-serif;
+    font-size: 13px;
+    color: rgba(122,92,68,0.6);
+    margin-top: 4px;
+    letter-spacing: 3px;
+    animation: fadeDown 0.7s 0.15s ease both;
+  }
+
+  /* Card */
+  .card {
+    background: var(--card-bg);
+    border-radius: 20px;
+    padding: 36px 40px;
+    box-shadow:
+      0 0 0 1px rgba(255,107,0,0.15),
+      0 20px 60px rgba(0,0,0,0.4),
+      inset 0 1px 0 rgba(255,255,255,0.8);
+    animation: fadeUp 0.6s 0.2s ease both;
+    backdrop-filter: blur(8px);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--saffron), var(--gold), var(--jade-light));
+  }
+
+  /* Corner decorations */
+  .corner {
+    position: absolute;
+    font-size: 28px;
+    opacity: 0.08;
+    color: var(--saffron);
+  }
+  .corner.tl { top: 10px; left: 14px; }
+  .corner.tr { top: 10px; right: 14px; transform: scaleX(-1); }
+  .corner.bl { bottom: 10px; left: 14px; transform: scaleY(-1); }
+  .corner.br { bottom: 10px; right: 14px; transform: scale(-1); }
+
+  /* Language selector */
+  .lang-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .lang-btn {
+    flex: 1;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 2px solid rgba(255,107,0,0.2);
+    background: rgba(255,107,0,0.05);
+    cursor: pointer;
+    font-family: 'Hind Siliguri', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--bark);
+    transition: all 0.2s ease;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .lang-btn .lang-native {
+    font-size: 18px;
+    font-weight: 400;
+    color: var(--muted);
+  }
+
+  .lang-btn:hover {
+    border-color: var(--saffron);
+    background: rgba(255,107,0,0.08);
+    transform: translateY(-1px);
+  }
+
+  .lang-btn.active {
+    border-color: var(--saffron);
+    background: var(--saffron);
+    color: white;
+    box-shadow: 0 4px 16px rgba(255,107,0,0.35);
+  }
+
+  .lang-btn.active .lang-native {
+    color: rgba(255,255,255,0.8);
+  }
+
+  /* Textarea */
+  .label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+    display: block;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 160px;
+    padding: 16px 18px;
+    border-radius: 12px;
+    border: 2px solid rgba(61,43,31,0.15);
+    background: white;
+    font-family: 'Hind Siliguri', sans-serif;
+    font-size: 17px;
+    line-height: 1.6;
+    color: var(--charcoal);
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  textarea::placeholder {
+    color: rgba(122,92,68,0.4);
+    font-style: italic;
+  }
+
+  textarea:focus {
+    border-color: var(--saffron);
+    box-shadow: 0 0 0 4px rgba(255,107,0,0.10);
+  }
+
+  /* Char count */
+  .meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    margin-bottom: 24px;
+  }
+
+  .char-count {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .char-count.warn { color: #c0392b; }
+
+  .clear-btn {
+    font-size: 12px;
+    color: var(--muted);
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-decoration: underline;
+    font-family: inherit;
+    padding: 0;
+    transition: color 0.15s;
+  }
+  .clear-btn:hover { color: var(--saffron); }
+
+  /* Speed slider */
+  .speed-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .speed-row label {
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+    white-space: nowrap;
+    min-width: 80px;
+  }
+
+  input[type=range] {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 4px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--saffron) var(--fill, 50%), rgba(61,43,31,0.15) var(--fill, 50%));
+    outline: none;
+    cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--saffron);
+    box-shadow: 0 2px 6px rgba(255,107,0,0.4);
+    transition: transform 0.15s;
+  }
+  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+  .speed-val {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--bark);
+    min-width: 30px;
+    text-align: right;
+  }
+
+  /* Generate button */
+  .gen-btn {
+    width: 100%;
+    padding: 17px;
+    border-radius: 14px;
+    border: none;
+    background: linear-gradient(135deg, var(--saffron), var(--deep-saffron));
+    color: white;
+    font-family: 'Yatra One', cursive;
+    font-size: 22px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 6px 24px rgba(255,107,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .gen-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+  }
+
+  .gen-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 32px rgba(255,107,0,0.5), inset 0 1px 0 rgba(255,255,255,0.2);
+  }
+
+  .gen-btn:active:not(:disabled) { transform: translateY(0); }
+
+  .gen-btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .spinner {
+    width: 20px; height: 20px;
+    border: 3px solid rgba(255,255,255,0.4);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+
+  .gen-btn.loading .spinner { display: block; }
+  .gen-btn.loading .btn-text { opacity: 0.7; }
+
+  /* Audio player */
+  .player-wrap {
+    margin-top: 28px;
+    padding: 20px 22px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(27,107,74,0.08), rgba(27,107,74,0.04));
+    border: 1.5px solid rgba(27,107,74,0.2);
+    display: none;
+    animation: fadeUp 0.4s ease both;
+  }
+
+  .player-wrap.show { display: block; }
+
+  .player-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+
+  .player-title {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--jade);
+  }
+
+  .download-btn {
+    font-size: 12px;
+    background: var(--jade);
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: background 0.2s;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .download-btn:hover { background: var(--jade-light); }
+
+  audio {
+    width: 100%;
+    border-radius: 8px;
+    accent-color: var(--jade);
+    outline: none;
+  }
+
+  /* Error */
+  .error-box {
+    margin-top: 16px;
+    padding: 14px 18px;
+    border-radius: 10px;
+    background: rgba(192,57,43,0.08);
+    border: 1.5px solid rgba(192,57,43,0.25);
+    color: #c0392b;
+    font-size: 14px;
+    display: none;
+  }
+  .error-box.show { display: block; }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    margin-top: 28px;
+    font-size: 12px;
+    color: rgba(122,92,68,0.5);
+    letter-spacing: 0.5px;
+    animation: fadeUp 0.6s 0.4s ease both;
+  }
+
+  /* Animations */
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+
+  <div class="header">
+    <div class="logo">Vaa<span>ṇi</span></div>
+    <div class="tagline">Indian Accent Text-to-Speech Generator</div>
+    <span class="devanagari-label">वाणी &nbsp;·&nbsp; आवाज़ &nbsp;·&nbsp; ಧ್ವನಿ</span>
+  </div>
+
+  <div class="card">
+    <span class="corner tl">❧</span>
+    <span class="corner tr">❧</span>
+    <span class="corner bl">❧</span>
+    <span class="corner br">❧</span>
+
+    <!-- Language -->
+    <span class="label">Choose Language</span>
+    <div class="lang-row">
+	  <button class="lang-btn active" data-lang="english_indian" onclick="selectLang(this)">
+		English ♀
+		<span class="lang-native">Neerja · Female</span>
+	  </button>
+	  <button class="lang-btn" data-lang="english_indian_male" onclick="selectLang(this)">
+		English ♂
+		<span class="lang-native">Prabhat · Male</span>
+	  </button>
+	  <button class="lang-btn" data-lang="hindi" onclick="selectLang(this)">
+		हिन्दी ♀
+		<span class="lang-native">Swara · Female</span>
+	  </button>
+	  <button class="lang-btn" data-lang="hindi_male" onclick="selectLang(this)">
+		हिन्दी ♂
+		<span class="lang-native">Madhur · Male</span>
+	  </button>
+	</div>
+
+    <!-- Text -->
+    <span class="label">Enter Your Text</span>
+    <textarea id="txt"
+      placeholder="Type something in English or हिन्दी..."
+      oninput="updateCount()"
+      maxlength="100000"></textarea>
+
+    <div class="meta-row">
+      <span class="char-count" id="charCount">0 / 100000</span>
+      <button class="clear-btn" onclick="clearText()">Clear</button>
+    </div>
+
+    <!-- Speed -->
+    <div class="speed-row">
+      <label>Speed</label>
+      <input type="range" id="speedRange" min="0.5" max="2" step="0.1" value="1"
+             oninput="updateSpeed(this)" />
+      <span class="speed-val" id="speedVal">1×</span>
+    </div>
+
+    <!-- Button -->
+    <button class="gen-btn" id="genBtn" onclick="generate()">
+      <div class="spinner"></div>
+      <span class="btn-text">🎙️ &nbsp;Bol — बोल</span>
+    </button>
+
+    <!-- Error -->
+    <div class="error-box" id="errBox"></div>
+
+    <!-- Player -->
+    <div class="player-wrap" id="playerWrap">
+      <div class="player-header">
+        <span class="player-title">▶ Audio Ready</span>
+        <a class="download-btn" id="downloadLink" href="#" download="vaani_speech.mp3">⬇ Download</a>
+      </div>
+      <audio id="audioPlayer" controls></audio>
+    </div>
+  </div>
+
+  <div class="footer">
+    Powered by gTTS &amp; Flask &nbsp;·&nbsp; Indian English &amp; Hindi voices &nbsp;·&nbsp; Made with ❤️ in India
+  </div>
+
+</div>
+
+<script>
+  let selectedLang = 'english_indian';
+  let audioURL = null;
+
+  const placeholders = {
+    english_indian: "Type something in English... e.g. Namaste, how are you doing today?",
+    hindi: "यहाँ हिन्दी में टाइप करें... जैसे, नमस्ते, आप कैसे हैं?"
+  };
+
+  function selectLang(btn) {
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedLang = btn.dataset.lang;
+    document.getElementById('txt').placeholder = placeholders[selectedLang];
+  }
+
+  function updateCount() {
+    const len = document.getElementById('txt').value.length;
+    const el = document.getElementById('charCount');
+    el.textContent = `${len} / 5000`;
+    el.className = 'char-count' + (len > 90000 ? ' warn' : '');
+  }
+
+  function clearText() {
+    document.getElementById('txt').value = '';
+    updateCount();
+    hidePlayer();
+    hideError();
+  }
+
+  function updateSpeed(el) {
+    const v = parseFloat(el.value);
+    document.getElementById('speedVal').textContent = v.toFixed(1) + '×';
+    const pct = ((v - 0.5) / 1.5) * 100 + '%';
+    el.style.setProperty('--fill', pct);
+    if (document.getElementById('audioPlayer').src) {
+      document.getElementById('audioPlayer').playbackRate = v;
+    }
+  }
+
+  function hidePlayer() {
+    document.getElementById('playerWrap').classList.remove('show');
+  }
+
+  function hideError() {
+    const e = document.getElementById('errBox');
+    e.classList.remove('show');
+    e.textContent = '';
+  }
+
+  function showError(msg) {
+    const e = document.getElementById('errBox');
+    e.textContent = '⚠️ ' + msg;
+    e.classList.add('show');
+  }
+
+  async function generate() {
+    const text = document.getElementById('txt').value.trim();
+    if (!text) { showError('Please enter some text first.'); return; }
+
+    hideError();
+    hidePlayer();
+    const btn = document.getElementById('genBtn');
+    btn.classList.add('loading');
+    btn.disabled = true;
+
+    try {
+      const res = await fetch('/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, language: selectedLang })
+      });
+
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(j.error || `Server error ${res.status}`);
+      }
+
+      const blob = await res.blob();
+      if (audioURL) URL.revokeObjectURL(audioURL);
+      audioURL = URL.createObjectURL(blob);
+
+      const player = document.getElementById('audioPlayer');
+      player.src = audioURL;
+      player.playbackRate = parseFloat(document.getElementById('speedRange').value);
+
+      document.getElementById('downloadLink').href = audioURL;
+      document.getElementById('playerWrap').classList.add('show');
+      player.play();
+
+    } catch (err) {
+      showError(err.message);
+    } finally {
+      btn.classList.remove('loading');
+      btn.disabled = false;
+    }
+  }
+
+  // Init slider fill
+  document.getElementById('speedRange').style.setProperty('--fill', '33.3%');
+</script>
+</body>
+</html>
