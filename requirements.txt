@@ -1,2 +1,5 @@
 flask>=3.0.0
 edge-tts>=6.1.9
+razorpay>=1.4.0
+flask-sqlalchemy>=3.0.0
+pydub>=0.25.1
