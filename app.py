@@ -32,7 +32,7 @@ def tts():
     voice = VOICES[lang_key]
 
     async def synthesize():
-        communicate = edge_tts.Communicate(text, voice, rate="-5%", volume="+10%")
+        communicate = edge_tts.Communicate(text, voice, rate="+15%", volume="+10%")
         buf = io.BytesIO()
         async for chunk in communicate.stream():
             if chunk["type"] == "audio":
