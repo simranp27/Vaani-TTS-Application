@@ -35,7 +35,7 @@ def tts():
         communicate = edge_tts.Communicate(
             chunk_text,
             VOICES[lang_key],
-            rate="+0%",      # slightly slower = more natural narration pace
+            rate="+5%",      # slightly slower = more natural narration pace
             volume="+10%",
             pitch="-5Hz"      # slightly deeper = more authoritative narrator tone
         )
