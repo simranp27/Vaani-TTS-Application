@@ -31,56 +31,32 @@ def tts():
 
     voice = VOICES[lang_key]
 
-
     async def synthesize_chunk(chunk_text):
-        communicate = edge_tts.Communicate(
-            chunk_text,
-            VOICES[lang_key],
-            rate="+0%",    # slower = more professional narration
-            volume="+10%",
-            pitch="-5Hz"    # slightly deeper = more authoritative
-        )
-        buf = io.BytesIO()
-        async for chunk in communicate.stream():
-            if chunk["type"] == "audio":
-                buf.write(chunk["data"])
-        buf.seek(0)
-        return buf
+    communicate = edge_tts.Communicate(chunk_text, VOICES[lang_key], rate="+5%", volume="+10%")
+    buf = io.BytesIO()
+    async for chunk in communicate.stream():
+        if chunk["type"] == "audio":
+            buf.write(chunk["data"])
+    buf.seek(0)
+    return buf
 
     async def synthesize():
         from pydub import AudioSegment
 
-        # Clean up text first
-        import re
-        cleaned = text.strip()
+        # Split text into paragraphs (on double line breaks or single line breaks)
+        paragraphs = [p.strip() for p in text.replace("\r\n", "\n").split("\n") if p.strip()]
 
-        # Split smartly — on punctuation + line breaks
-        # Each sentence gets its own clip for precise pause control
-        sentences = re.split(r'(?<=[।.!?])\s+', cleaned)
-        sentences = [s.strip() for s in sentences if s.strip()]
+        if len(paragraphs) <= 1:
+            # No paragraph breaks — just synthesize normally
+            return await synthesize_chunk(text)
 
-        if len(sentences) <= 1:
-            return await synthesize_chunk(cleaned)
-
+        silence = AudioSegment.silent(duration=600)  # 600ms pause between paragraphs
         final_audio = AudioSegment.empty()
 
-        for i, sentence in enumerate(sentences):
-            chunk_buf = await synthesize_chunk(sentence)
+        for para in paragraphs:
+            chunk_buf = await synthesize_chunk(para)
             segment = AudioSegment.from_file(chunk_buf, format="mp3")
-
-            # Decide pause length based on ending punctuation
-            if sentence.endswith(('।', '.')):
-                pause = AudioSegment.silent(duration=700)   # full stop — longer pause
-            elif sentence.endswith(('!', '?')):
-                pause = AudioSegment.silent(duration=800)   # dramatic pause
-            elif sentence.endswith(','):
-                pause = AudioSegment.silent(duration=300)   # comma — short pause
-            elif sentence.endswith('...'):
-                pause = AudioSegment.silent(duration=1000)  # ellipsis — suspense pause
-            else:
-                pause = AudioSegment.silent(duration=500)   # default
-
-            final_audio += segment + pause
+            final_audio += segment + silence
 
         out_buf = io.BytesIO()
         final_audio.export(out_buf, format="mp3")
