@@ -32,13 +32,13 @@ def tts():
     voice = VOICES[lang_key]
 
     async def synthesize_chunk(chunk_text):
-    communicate = edge_tts.Communicate(chunk_text, VOICES[lang_key], rate="+5%", volume="+10%")
-    buf = io.BytesIO()
-    async for chunk in communicate.stream():
-        if chunk["type"] == "audio":
-            buf.write(chunk["data"])
-    buf.seek(0)
-    return buf
+        communicate = edge_tts.Communicate(chunk_text, VOICES[lang_key], rate="+5%", volume="+10%")
+        buf = io.BytesIO()
+        async for chunk in communicate.stream():
+            if chunk["type"] == "audio":
+                buf.write(chunk["data"])
+        buf.seek(0)
+        return buf
 
     async def synthesize():
         from pydub import AudioSegment
